@@ -11,26 +11,32 @@ app = Flask(__name__)
 # this could be eg.: Redis, or DynamoDB
 STORE = {}
 
+# this could be a counter in Redis, which can be atomically incremented
+COUNTER = 0
+
 ABC = [char for char in ascii_letters + digits]
 
-def generate_shortcode(length=4):
-    chars = random.choices(ABC, k=length)
-    shortcode = ''.join(chars)
-    return shortcode
+def encode(number):
+    string = ''
+    while(number > 0):
+        string = ABC[number % len(ABC)] + string
+        number //= len(ABC)
+    return string
 
 
 @app.route('/shorten', methods=['POST'])
 def create():
+    global COUNTER
+
+    # TODO escape JS in url
     url = request.json.get('url')
 
-    while True:
-        shortcode = generate_shortcode()
-        if shortcode not in STORE:
-            # found an unused shortcode
-            STORE[shortcode] = url
-            break
+    COUNTER += 1
 
-    return ROOT_URL + shortcode
+    encoded = encode(COUNTER)
+    STORE[encoded] = url
+
+    return ROOT_URL + encoded
 
 
 @app.route('/<shortcode>')

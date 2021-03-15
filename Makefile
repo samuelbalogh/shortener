@@ -1,4 +1,5 @@
-url = "https://samu.space"
+rand = $(shell echo $$RANDOM)
+url = https://samu.space?$(rand)
 
 install:
 	python3 -m pip install -r requirements.txt
@@ -9,4 +10,4 @@ run:
 curl:
 	@echo "posting $(url) to the shortener service";
 	@echo "the resulting short URL:"
-	@curl -X POST http://127.0.0.1:5000/shorten --data '{"url": $(url)}' --header "Content-Type: application/json"; echo
+	@curl -X POST http://127.0.0.1:5000/shorten --data '{"url": "$(url)"}' --header "Content-Type: application/json"; echo
