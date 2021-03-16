@@ -1,5 +1,6 @@
 rand = $(shell echo $$RANDOM)
 url = https://samu.space?$(rand)
+run: export APP_ENV = local
 
 install:
 	python3 -m pip install -r requirements.txt
