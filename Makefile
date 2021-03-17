@@ -1,5 +1,5 @@
-rand = $(shell echo $$RANDOM)
-url = https://samu.space?$(rand)
+rand := $(shell echo $$RANDOM)
+url = https://samu.space?${rand}
 app_url = https://urlshrtr.herokuapp.com/shorten
 app_url = http://127.0.0.1:5000/shorten
 prod_url = https://urlshrtr.herokuapp.com/shorten
