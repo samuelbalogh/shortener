@@ -9,6 +9,8 @@ This is a URL shortener proof-of-concept.
 
 To try the "production" version deployed on Heroku, run `make prodpost`. This will post a URL (with `curl`) to the app and it should return a short URL. Visiting the short URL should redirect to the original one:
 
+> NOTE: the Heroku dyno might be in a sleeping state, so the first request might take a few seconds.
+
 ```
 make prodpost
 Posting https://xkcd.com/1313 to the shortener service..
