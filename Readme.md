@@ -40,6 +40,9 @@ make run
 
 ```
 make post
+Posting https://xkcd.com/814 to the shortener service..
+The resulting short URL:
+http://127.0.0.1:5000/1
 ```
 
 
@@ -53,9 +56,21 @@ make post
 
 ### Shortcomings
 
-Things that a production 
 
-- Testing is only for the happy path
-- Logging is minimal
-- Exception handling is lacking
-- Rate limiting would be nice to have
+#### code-related
+
+Things related to the code that would be essential in a production setting:
+
+- **Testing** is only for the happy path - edge cases should be tested
+- **Logging** is minimal. More verbose logging would be beneficial.
+- **Exception handling** is lacking - error handling is not very thorough.
+
+
+#### infra-related
+
+Things related to the deployment of the service:
+
+- **load balancing** - such a service must have multiple replicas behind a load balancer in production.
+- **monitoring** - request rate, error rate, request latency, Redis memory usage would be some aspects which would have to be monitored
+- **rate limiting** would be nice (based on user agent, IP, or other fingerprints)
+- **log aggregation** would be nice to have 
