@@ -109,11 +109,19 @@ STORE = _get_store()
 
 @app.route('/shorten', methods=['POST'])
 def create():
-    # TODO escape JS in url
-    url = request.json.get('url')
+    try:
+        # TODO escape JS in url
+        url = request.json.get('url')
+    except AttributeError:
+        return 400, "Could not parse url"
 
+    # increment counter
     counter = STORE.inc()
+
+    # encode counter - this will be the shortcode
     encoded = Encoder.encode(counter)
+
+    # set a new key: counter -> long url
     STORE.set(counter, url)
 
     if ENV == 'local':
