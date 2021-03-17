@@ -10,13 +10,14 @@ This is a URL shortener proof-of-concept.
 To try the "production" version deployed on Heroku, run `make prodpost`. This will post a URL (with `curl`) to the app and it should return a short URL. Visiting the short URL should redirect to the original one:
 
 ```
+make prodpost
 Posting https://xkcd.com/1313 to the shortener service..
 The resulting short URL:
 https://urlshrtr.herokuapp.com/2
 ```
 
 ```
- 🍰   curl https://urlshrtr.herokuapp.com/2
+ curl https://urlshrtr.herokuapp.com/2
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <title>Redirecting...</title>
 <h1>Redirecting...</h1>
