@@ -1,4 +1,6 @@
 import os
+import sys
+import logging
 
 from string import ascii_letters, digits
 
@@ -6,14 +8,15 @@ import redis
 from flask import Flask, request, redirect
 
 ROOT_URL = os.getenv('APP_URL') or 'http://127.0.0.1:5000/'
+ENV = os.getenv('APP_ENV') or 'local'
 
 app = Flask(__name__)
 
-# this could be eg.: Redis, or DynamoDB
-STORE = {}
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+log.addHandler(handler)
 
-# this could be a counter in Redis, which can be atomically incremented
-COUNTER = 0
 
 class DataStore:
     def __init__(self, backend):
@@ -25,6 +28,12 @@ class DataStore:
     def get(self, key):
         return self.backend.get(key)
 
+    def inc(self):
+        return self.backend.inc()
+
+    def __str__(self):
+        return str(self.backend)
+
 
 class RedisBackend:
     def __init__(self, url=None):
@@ -32,6 +41,8 @@ class RedisBackend:
             url = os.getenv('REDIS_URL')
 
         self.db = redis.Redis.from_url(url)
+        # A key that will be used as a counter
+        self.counter = 'COUNTER'
 
     def set(self, key, value):
         self.db.set(key, value)
@@ -39,16 +50,27 @@ class RedisBackend:
     def get(self, key):
         return self.db.get(key)
 
+    def inc(self):
+        return self.db.incr(self.counter)
+
 
 class InMemoryBackend:
     def __init__(self):
         self.db = {}
+        self.counter = 0
 
     def set(self, key, value):
         self.db[key] = value
 
     def get(self, key):
         return self.db.get(key)
+
+    def inc(self):
+        self.counter += 1
+        return self.counter
+
+    def __str__(self):
+        return str({'store': self.db, 'counter': self.counter})
 
 
 class Encoder:
@@ -78,23 +100,24 @@ class Encoder:
 
 
 def _get_store():
-    env = os.getenv('APP_ENV') or 'local'
-    if env == 'local':
+    if ENV == 'local':
         return DataStore(InMemoryBackend())
-    elif env == 'prod':
+    elif ENV == 'prod':
         return DataStore(RedisBackend())
 
 STORE = _get_store()
 
 @app.route('/shorten', methods=['POST'])
 def create():
-    global COUNTER
     # TODO escape JS in url
     url = request.json.get('url')
 
-    COUNTER += 1
-    encoded = Encoder.encode(COUNTER)
-    STORE.set(COUNTER, url)
+    counter = STORE.inc()
+    encoded = Encoder.encode(counter)
+    STORE.set(counter, url)
+
+    if ENV == 'local':
+        log.info(str(STORE))
 
     return ROOT_URL + encoded
 
