@@ -1,5 +1,5 @@
-rand := $(shell echo $$RANDOM)
-url = https://samu.space?${rand}
+rand := $(shell echo $$(shuf -i 1-2000 -n 1))
+url = https://xkcd.com/${rand}
 app_url = https://urlshrtr.herokuapp.com/shorten
 app_url = http://127.0.0.1:5000/shorten
 prod_url = https://urlshrtr.herokuapp.com/shorten
@@ -32,3 +32,11 @@ prodpost:
 	$(eval SHORTURL = $(shell curl -s -X POST "$(prod_url)" --data '{"url": "$(url)"}' --header "Content-Type: application/json"))
 	@echo "The resulting short URL:"
 	@echo $(SHORTURL)
+
+.PHONY: test
+test:
+	@( \
+		. ./env/bin/activate; \
+		python3 -m pytest; \
+	)
+	

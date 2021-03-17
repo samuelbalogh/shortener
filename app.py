@@ -113,7 +113,9 @@ def create():
         # TODO escape JS in url
         url = request.json.get('url')
     except AttributeError:
-        return 400, "Could not parse url"
+        message = "Could not parse URL"
+        log.exception(message)
+        return message, 400
 
     # increment counter
     counter = STORE.inc()
@@ -134,6 +136,10 @@ def create():
 def get(shortcode):
     decoded = Encoder.decode(shortcode)
     long_url = STORE.get(decoded)
+
+    if long_url is None:
+        return "Not found", 404
+
     return redirect(long_url)
 
 
