@@ -124,7 +124,7 @@ def create():
     encoded = Encoder.encode(counter)
 
     # set a new key: counter -> long url
-    STORE.set(counter, url)
+    STORE.set(encoded, url)
 
     if ENV == 'local':
         log.info(str(STORE))
