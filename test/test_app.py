@@ -43,9 +43,21 @@ class TestShortener:
         """
         res = test_client.post(
             '/shorten',
-            data=json.dumps({'url': 'example.com'}),
+            data=json.dumps({'url': 'http://example.com'}),
             headers={"Content-Type": "application/json"}
         )
         url = [i for i in res.response][0]
 
         assert url == b'http://127.0.0.1:5000/1'
+
+    def test_invalid_url(self):
+        """
+        Ensure invalid URLs are rejected
+        """
+        res = test_client.post(
+            '/shorten',
+            data=json.dumps({'url': 'asd'}),
+            headers={"Content-Type": "application/json"}
+        )
+
+        assert res.status_code == 400

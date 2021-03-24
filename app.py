@@ -2,6 +2,9 @@ import os
 import sys
 import logging
 
+from abc import ABC, abstractmethod
+from urllib.parse import urlparse
+
 from string import ascii_letters, digits
 
 import redis
@@ -16,6 +19,9 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 log.addHandler(handler)
+
+class URLInvalidError(Exception):
+    pass
 
 
 class DataStore:
@@ -35,7 +41,21 @@ class DataStore:
         return str(self.backend)
 
 
-class RedisBackend:
+class Backend(ABC):
+    @abstractmethod
+    def set(self, key, value):
+        pass
+
+    @abstractmethod
+    def get(self, key):
+        pass
+
+    @abstractmethod
+    def inc(self):
+        pass
+
+
+class RedisBackend(Backend):
     def __init__(self, url=None):
         if url is None:
             url = os.getenv('REDIS_URL')
@@ -54,7 +74,7 @@ class RedisBackend:
         return self.db.incr(self.counter)
 
 
-class InMemoryBackend:
+class InMemoryBackend(Backend):
     def __init__(self):
         self.db = {}
         self.counter = 0
@@ -112,10 +132,14 @@ def create():
     try:
         # TODO escape JS in url
         url = request.json.get('url')
-    except AttributeError:
+        result = urlparse(url)
+        if not all([result.scheme, result.netloc]):
+            raise URLInvalidError
+    except (AttributeError, URLInvalidError):
         message = "Could not parse URL"
         log.exception(message)
         return message, 400
+    
 
     # increment counter
     counter = STORE.inc()
