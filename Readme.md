@@ -13,7 +13,7 @@ To try the "production" version deployed on Heroku, run `make prodpost`. This wi
 
 ```
 make prodpost
-Posting https://xkcd.com/1313 to the shortener service..
+Posting https://xkcd.com/1313?long-long-long-url to the shortener service..
 The resulting short URL:
 https://urlshrtr.herokuapp.com/2
 ```
@@ -23,7 +23,7 @@ https://urlshrtr.herokuapp.com/2
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <title>Redirecting...</title>
 <h1>Redirecting...</h1>
-<p>You should be redirected automatically to target URL: <a href="b'https://xkcd.com/1313'">b'https://xkcd.com/1313'</a>.  If not click the link.
+<p>You should be redirected automatically to target URL: <a href="b'https://xkcd.com/1313?long-long-long-url'">b'https://xkcd.com/1313'</a>.  If not click the link.
 ```
 
 ### Running it locally
