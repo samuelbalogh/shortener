@@ -6,20 +6,12 @@ prod_url = https://urlshrtr.herokuapp.com/shorten
 run: export APP_ENV = local
 
 lint:
-	@( \
-		. ./env/bin/activate; \
-		python3 -m black . --exclude env; \
-	)
+	poetry run python3 -m black . --exclude env; \
 	
 install:
-	@( \
-	  python3 -m venv env; \
-		. ./env/bin/activate; \
-		python3 -m pip install -r requirements.txt; \
-	)
-
+	poetry install
 run:
-	. ./env/bin/activate && python3 app.py
+	poetry run python app.py
 
 post:
 	@echo "Posting $(url) to the shortener service..";
@@ -35,8 +27,4 @@ prodpost:
 
 .PHONY: test
 test:
-	@( \
-		. ./env/bin/activate; \
-		python3 -m pytest; \
-	)
-	
+	poetry run python -m pytest
