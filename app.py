@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 import logging
 
 from abc import ABC, abstractmethod
@@ -10,7 +11,7 @@ from string import ascii_letters, digits
 import redis
 from flask import Flask, request, redirect
 
-ROOT_URL = os.getenv('APP_URL') or 'http://127.0.0.1:5000/'
+ROOT_URL = os.getenv('APP_URL') or 'http://127.0.0.1:5005/'
 ENV = os.getenv('APP_ENV') or 'local'
 
 app = Flask(__name__)
@@ -147,19 +148,21 @@ def create():
     # encode counter - this will be the shortcode
     encoded = Encoder.encode(counter)
 
-    # set a new key: counter -> long url
-    STORE.set(counter, url)
+    # 
+    encoded_randomized = f"{encoded}{random.randint(1,100)}"
+
+    # set a new key: encoded_randomized -> long url
+    STORE.set(encoded_randomized, url)
 
     if ENV == 'local':
         log.info(str(STORE))
 
-    return ROOT_URL + encoded
+    return ROOT_URL + encoded_randomized
 
 
 @app.route('/<shortcode>')
 def get(shortcode):
-    decoded = Encoder.decode(shortcode)
-    long_url = STORE.get(decoded)
+    long_url = STORE.get(shortcode)
 
     if long_url is None:
         return "Not found", 404
@@ -168,4 +171,4 @@ def get(shortcode):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5005)
