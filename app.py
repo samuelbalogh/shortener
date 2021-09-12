@@ -2,6 +2,8 @@ import os
 import sys
 import random
 import logging
+from typing import Text
+from typing import Tuple
 
 from abc import ABC, abstractmethod
 from urllib.parse import urlparse
@@ -10,6 +12,7 @@ from string import ascii_letters, digits
 
 import redis
 from flask import Flask, request, redirect
+
 
 ROOT_URL = os.getenv('APP_URL') or 'http://127.0.0.1:5005/'
 ENV = os.getenv('APP_ENV') or 'local'
@@ -21,6 +24,7 @@ log.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
 log.addHandler(handler)
 
+
 class URLInvalidError(Exception):
     pass
 
@@ -29,30 +33,30 @@ class DataStore:
     def __init__(self, backend):
         self.backend = backend
 
-    def set(self, key, value):
+    def set(self, key, value) -> None:
         self.backend.set(key, value)
 
-    def get(self, key):
+    def get(self, key) -> Text:
         return self.backend.get(key)
 
-    def inc(self):
+    def inc(self) -> int:
         return self.backend.inc()
 
-    def __str__(self):
+    def __str__(self) -> Text:
         return str(self.backend)
 
 
 class Backend(ABC):
     @abstractmethod
-    def set(self, key, value):
+    def set(self, key, value) -> None:
         pass
 
     @abstractmethod
-    def get(self, key):
+    def get(self, key) -> Text:
         pass
 
     @abstractmethod
-    def inc(self):
+    def inc(self) -> int:
         pass
 
 
@@ -65,13 +69,13 @@ class RedisBackend(Backend):
         # A key that will be used as a counter
         self.counter = 'COUNTER'
 
-    def set(self, key, value):
+    def set(self, key, value) -> None:
         self.db.set(key, value)
 
-    def get(self, key):
+    def get(self, key) -> Text:
         return self.db.get(key)
 
-    def inc(self):
+    def inc(self) -> int:
         return self.db.incr(self.counter)
 
 
@@ -80,17 +84,17 @@ class InMemoryBackend(Backend):
         self.db = {}
         self.counter = 0
 
-    def set(self, key, value):
+    def set(self, key, value) -> None:
         self.db[key] = value
 
-    def get(self, key):
+    def get(self, key) -> Text:
         return self.db.get(key)
 
-    def inc(self):
+    def inc(self) -> int:
         self.counter += 1
         return self.counter
 
-    def __str__(self):
+    def __str__(self) -> Text:
         return str({'store': self.db, 'counter': self.counter})
 
 
@@ -99,7 +103,7 @@ class Encoder:
     BASE = len(CHARSET)
 
     @classmethod
-    def encode(cls, number):
+    def encode(cls, number) -> Text:
         """
         Encode number in base62
         """
@@ -110,7 +114,7 @@ class Encoder:
         return string
     
     @classmethod
-    def decode(cls, shortcode):
+    def decode(cls, shortcode) -> int:
         """
         Decode base62 number to base 10 number
         """
@@ -120,16 +124,17 @@ class Encoder:
         return number
 
 
-def _get_store():
+def _get_store() -> DataStore:
     if ENV == 'local':
         return DataStore(InMemoryBackend())
     elif ENV == 'prod':
         return DataStore(RedisBackend())
+    raise RuntimeError("enviroment {ENV} is not supported")
 
 STORE = _get_store()
 
 @app.route('/shorten', methods=['POST'])
-def create():
+def create() -> Tuple[Text, int]:
     try:
         # TODO escape JS in url
         url = request.json.get('url')
@@ -142,26 +147,20 @@ def create():
         return message, 400
     
 
-    # increment counter
-    counter = STORE.inc()
+    incremented_counter = STORE.inc()
+    encoded_counter = Encoder.encode(incremented_counter)
+    encoded_randomized = f"{encoded_counter}{random.randint(1,100)}"
 
-    # encode counter - this will be the shortcode
-    encoded = Encoder.encode(counter)
-
-    # 
-    encoded_randomized = f"{encoded}{random.randint(1,100)}"
-
-    # set a new key: encoded_randomized -> long url
     STORE.set(encoded_randomized, url)
 
     if ENV == 'local':
         log.info(str(STORE))
 
-    return ROOT_URL + encoded_randomized
+    return ROOT_URL + encoded_randomized, 201
 
 
 @app.route('/<shortcode>')
-def get(shortcode):
+def get(shortcode) -> Tuple[Text, int]:
     long_url = STORE.get(shortcode)
 
     if long_url is None:
